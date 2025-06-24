@@ -1,3 +1,8 @@
+--[[
+Octohook ui lib informant version
+Developed by liam#4567
+Edited by xz#1111
+]]
 
 -- // Load
 
@@ -4485,7 +4490,7 @@ function library:init()
         self.watermark = {
             objects = {};
             text = {
-                {"lucianland.wtf <3", true},
+                {"informant.wtf", true},
                 {"V"..getgenv().Config.Version, true},
                 {getgenv().luaguardvars.DiscordName, true},
                 {'0 fps', true},
@@ -4615,61 +4620,48 @@ function library:CreateSettingsTab(menu)
     local configSection = settingsTab:AddSection('Config', 2);
     local mainSection = settingsTab:AddSection('Main', 1);
     local creditsSection = settingsTab:AddSection('Credits', 2);
-    creditsSection:AddText({text = "@lucianland on dc"})
+    creditsSection:AddSeparator({text = 'Owners/Developers'});
+    creditsSection:AddText({text = "lucianland on dc"})
 
-
-    configSection:AddBox({text = 'Config Name', flag = 'configinput'})
-    configSection:AddList({text = 'Config', flag = 'selectedconfig'})
-
-    local function refreshConfigs()
-        library.options.selectedconfig:ClearValues();
-        for _,v in next, listfiles(self.cheatname..'/'..self.gamename..'/configs') do
-            local ext = '.'..v:split('.')[#v:split('.')];
-            if ext == self.fileext then
-                library.options.selectedconfig:AddValue(v:split('\\')[#v:split('\\')]:sub(1,-#ext-1))
-            end
-        end
-    end
-
-    configSection:AddButton({text = 'Load', confirm = false, callback = function()
-        library:LoadConfig(library.flags.selectedconfig);
-    end}):AddButton({text = 'Save', confirm = true, callback = function()
-        library:SaveConfig(library.flags.selectedconfig);
-    end})
-
-    configSection:AddButton({text = 'Create', confirm = false, callback = function()
-        if library.flags.configinput == "" then 
-            return
-        end
-        if library:GetConfig(library.flags.configinput) then
-            return
-        end
-        writefile(self.cheatname..'/'..self.gamename..'/configs/'..library.flags.configinput.. self.fileext, http:JSONEncode({}));
-        refreshConfigs()
-    end}):AddButton({text = 'Delete', confirm = true, callback = function()
-        if library:GetConfig(library.flags.selectedconfig) then
-            delfile(self.cheatname..'/'..self.gamename..'/configs/'..library.flags.selectedconfig.. self.fileext);
-            refreshConfigs()
-        end
-    end})
-
-    refreshConfigs()
 
     mainSection:AddBind({text = 'Open / Close', flag = 'togglebind', nomouse = true, noindicator = true, bind = Enum.KeyCode.RightShift, callback = function()
         library:SetOpen(not library.open)
     end});
 
+  
+
     mainSection:AddButton({text = 'Unload', confirm = true, callback = function()
         library:Unload();
     end})
-
-    
 
     mainSection:AddSeparator({text = 'Watermark'})
     mainSection:AddToggle({text = 'Enabled', flag = 'watermark_enabled'});
     mainSection:AddList({text = 'Position', flag = 'watermark_pos', selected = 'Custom', values = {'Top', 'Top Left', 'Top Right', 'Bottom Left', 'Bottom Right', 'Custom'}, callback = function(val)
         library.watermark.lock = val;
     end})
+
+    local themeStrings = {};
+    for _,v in next, library.themes do
+        table.insert(themeStrings, v.name)
+    end
+    local themeSection = settingsTab:AddSection('Theme', 1);
+    local setByPreset = false
+
+    themeSection:AddList({text = 'Presets', flag = 'preset_theme', values = themeStrings, callback = function(newTheme)
+        setByPreset = true
+        for _,v in next, library.themes do
+            if v.name == newTheme then
+                for x, d in pairs(library.options) do
+                    if v.theme[tostring(x)] ~= nil then
+                        d:SetColor(v.theme[tostring(x)])
+                    end
+                end
+                library:SetTheme(v.theme)
+                break
+            end
+        end
+        setByPreset = false
+    end}):Select('Default');
 
     return settingsTab;
 end
